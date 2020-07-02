@@ -67,13 +67,6 @@ public:
     void ReplaceText(SourceLocation Start, unsigned OrigLength,StringRef NewStr){
         if (compilerInstance->getSourceManager().isMacroBodyExpansion(Start)) {
             Start = compilerInstance->getSourceManager().getSpellingLoc(Start);
-//            unsigned offset = 0;
-//            const char *buffer = compilerInstance->getSourceManager().getCharacterData(Start);
-//            size_t size = strlen(buffer);
-//            while (offset +1 < size  && *(buffer + offset)=='\\' && *(buffer + offset + 1)=='\n') {
-//                   offset += 2;
-//            }
-//            Start = Start.getLocWithOffset(offset);
         }
         rewriter.ReplaceText(Start, OrigLength, NewStr);
     }
@@ -345,10 +338,14 @@ public:
                 unsigned index = 0;
                  for(ArrayRef< QualType >::iterator i = params.begin(), e = params.end(); i != e; i++,index++){
                      QualType t = *i;
-                    success = success || recursiveHandleQualType(slideLoc, end, t);
+                    success =  recursiveHandleQualType(slideLoc, end, t) || success;
                  }
             }
-        }else if(isa<AttributedType>(type)){
+        }else if(isa<ObjCObjectType>(type)) {
+            //与ObjCObjectPointerType 处理方式一致，省略...
+            
+        }
+        else if(isa<AttributedType>(type)){
             const AttributedType *attributedType = type->getAs<AttributedType>(); //指针类型
             success = recursiveHandleQualType(slideLoc, end, attributedType->getModifiedType());
         }
